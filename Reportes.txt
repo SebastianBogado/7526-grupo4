@@ -1,0 +1,293 @@
+REPORTE SNAKE
+
+Información general
+
+      START_TIME         END_TIME     BLOCKS    FACILITIES    STORAGES
+               0            43200         45            15           2 
+
+Bloques no ejecutables
+ AUTOS		STORAGE 30
+PARQUE	STORAGE 10080				; PARA CONTROLAR CUÁNTA GENTE HAY EN EL PARQUE
+TIEMPO	TABLE		M1,3600,3600,10		; TIEMPO DE PERMANENCIA EN EL PARQUE
+GENTE		TABLE		S$PARQUE,600,300,10	; CANTIDAD DE GENTE
+AUTITOS	QTABLE	Q_AUTOS,0,300,15	; TIEMPO EN COLA DE LOS AUTITOS CHOCADORES
+COMIDA	TABLE		MP1,3600,3600,10	; TIEMPO QUE TARDAN EN RECIBIR LA COMIDA
+MED 		FUNCTION RN2,D4
+0.4,90/0.65,120/0.95,240/1,360
+INITIAL	X$STANDS, 4
+
+
+Bloques ejecutables
+
+  LINE         LOC  BLOCK_TYPE                               ENTRY_COUNT  CURRENT_COUNT  RETRY
+    17           1  GENERATE        20,15,14400                     1451              0      0
+    18           2  ENTER           PARQUE                          1451              0      0
+    19           3  TABULATE        GENTE                           1451              0      0
+    20           4  ADVANCE         30,20                           1451              2      0
+    21           5  TRANSFER        ,SET_VAL                        1449              0      0
+    22           6  GENERATE        20,10                           2163              0      0
+    23           7  ENTER           PARQUE                          2163              0      0
+    24           8  TABULATE        GENTE                           2163              0      0
+    25     SET_VAL  ASSIGN          MED,FN$MED                      3612              0      0
+    26          10  TRANSFER        0.96,,ELEG_JUEGO                3612              0      0
+    27          11  PRIORITY        1                                141              0      0
+    29  ELEG_JUEGO  TRANSFER        0.4,,STANDS                     3612              0      0
+    31       AUTOS  QUEUE           Q_AUTOS                         2164            249      0
+    32          14  ENTER           AUTOS                           1915              0      0
+    33          15  DEPART          Q_AUTOS                         1915              0      0
+    34          16  ADVANCE         600,480                         1915             30      0
+    35          17  LEAVE           AUTOS                           1885              0      0
+    36          18  TRANSFER        0.75,,COMIDA                    1885              0      0
+    38      STANDS  SELECT      NU  1,1,X$STANDS,,,OCUP             1952              0      0
+    39          20  TRANSFER        ,JUGAR                          1215              0      0
+    40        OCUP  SELECT      MIN 1,1,X$STANDS,,Q                  737              0      0
+    42       JUGAR  QUEUE           *1                              1952              0      0
+    43          23  SEIZE           *1                              1952              0      0
+    44          24  DEPART          *1                              1952              0      0
+    45          25  ADVANCE         P$MED,30                        1952             11      0
+    46          26  RELEASE         *1                              1941              0      0
+    48      COMIDA  MARK            1                               3322              0      0
+    49          28  QUEUE           Q_COMIDA                        3322           2966      0
+    50          29  SEIZE           COMIDA                           356              0      0
+    51          30  DEPART          Q_COMIDA                         356              0      0
+    52          31  ADVANCE         120,60                           356              1      0
+    53          32  RELEASE         COMIDA                           355              0      0
+    54          33  TABULATE        COMIDA                           355              0      0
+    55          34  LEAVE           PARQUE                           355              0      0
+    56          35  TABULATE        TIEMPO                           355              0      0
+    57          36  TERMINATE                                        355              0      0
+    61          37  GENERATE        ,,10800,1                          1              0      0
+    62          38  SAVEVALUE       STANDS,7                           1              0      0
+    63          39  ADVANCE         7200                               1              0      0
+    64          40  SAVEVALUE       STANDS,10                          1              0      0
+    65          41  ADVANCE         10800                              1              0      0
+    66          42  SAVEVALUE       STANDS,14                          1              0      0
+    67          43  TERMINATE                                          1              0      0
+    70          44  GENERATE        3600                              12              0      0
+    71          45  TERMINATE       1                                 12              0      0
+
+Facilities
+
+ FACILITY          ENTRIES    UTIL.  AVE_TIME  AVAILABLE   OWNER   PEND   INTER   RETRY   DELAY
+              1        265    0,952   155,140          1       0      0       0       0       0
+              2        254    0,943   160,378          1    3242      0       0       0       0
+              3        264    0,908   148,636          1    3254      0       0       0       0
+              4        253    0,902   154,020          1    3249      0       0       0       0
+              5        183    0,645   152,186          1    3252      0       0       0       0
+              6        170    0,615   156,165          1    2790      0       0       0       0
+              7        176    0,585   143,528          1    3253      0       0       0       0
+              8        126    0,424   145,492          1    2786      0       0       0       0
+              9        102    0,381   161,392          1    3239      0       0       0       0
+             10         88    0,331   162,727          1    3256      0       0       0       0
+             11         30    0,102   146,833          1    3259      0       0       0       0
+             12         22    0,096   188,864          1    2803      0       0       0       0
+             13         12    0,033   119,750          1       0      0       0       0       0
+             14          7    0,018   109,286          1       0      0       0       0       0
+         COMIDA        356    0,995   120,750          1    3207      0       0       0    2966
+
+Queues
+
+ QUEUE             MAX      CONT.  ENTRIES ENTRIES(0)  AVE.CONT.   AVE.TIME    AVE.(-0)   RETRY
+              1      6         0       265      116       1,399     228,008     405,517       0
+              2      6         0       254      110       1,293     219,921     387,917       0
+              3      6         0       264      135       1,188     194,455     397,953       0
+              4      6         0       253      131       1,096     187,111     388,025       0
+              5      6         0       183      128       0,477     112,656     374,836       0
+              6      6         0       170      122       0,423     107,406     380,396       0
+              7      6         0       176      132       0,382      93,795     375,182       0
+              8      3         0       126      110       0,109      37,230     293,188       0
+              9      3         0       102       85       0,108      45,873     275,235       0
+             10      3         0        88       75       0,103      50,489     341,769       0
+             11      1         0        30       30       0,000       0,000       0,000       0
+             12      1         0        22       22       0,000       0,000       0,000       0
+             13      1         0        12       12       0,000       0,000       0,000       0
+             14      1         0         7        7       0,000       0,000       0,000       0
+        Q_AUTOS    251       249      2164      472      84,035    1677,592    2145,573       0
+       Q_COMIDA   2966      2966      3322        2    1262,206   16413,995   16423,883       0
+
+Storages
+
+ STORAGE           CAP.   REMAIN.   MIN.   MAX.  ENTRIES  AVL.   AVE.C.    UTIL.  RETRY   DELAY
+          AUTOS      30        0       0     30     1915     1   25,943    0,865      0     249
+         PARQUE   10080     6821       0   3259     3614     1 1387,699    0,138      0       0
+
+Tables
+
+COMIDA              TABLE            MP1,3600,3600,10
+
+               MEDIA                         :      10319,442
+               DESVIACION ESTANDAR           :      11991,582
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -      3600          167      47,042         47,042        52,958
+      3601  -      7200           31       8,732         55,775        44,225
+      7201  -     10800           24       6,761         62,535        37,465
+     10801  -     14400           18       5,070         67,606        32,394
+     14401  -     18000           19       5,352         72,958        27,042
+     18001  -     21600           20       5,634         78,592        21,408
+     21601  -     25200           14       3,944         82,535        17,465
+     25201  -     28800           18       5,070         87,606        12,394
+     28801  -     32400           17       4,789         92,394         7,606
+     32401  -  Infinito           27       7,606        100,000         0,000
+
+        MEDIA OVERFLOW                :     35340,630
+        DESVIACION ESTANDAR OVERFLOW  :      1675,939
+
+        CANTIDAD DE VALORES TABULADOS :           355
+        VALOR MAXIMO TABULADO         :     38118,000
+
+GENTE               TABLE            S$PARQUE,600,300,10
+
+               MEDIA                         :       1605,409
+               DESVIACION ESTANDAR           :        948,185
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -       600          714      19,757         19,757        80,243
+       601  -       900          331       9,159         28,915        71,085
+       901  -      1200          330       9,131         38,046        61,954
+      1201  -      1500          325       8,993         47,039        52,961
+      1501  -      1800          327       9,048         56,087        43,913
+      1801  -      2100          327       9,048         65,136        34,864
+      2101  -      2400          326       9,020         74,156        25,844
+      2401  -      2700          326       9,020         83,177        16,823
+      2701  -      3000          327       9,048         92,225         7,775
+      3001  -  Infinito          281       7,775        100,000         0,000
+
+        MEDIA OVERFLOW                :      3129,107
+        DESVIACION ESTANDAR OVERFLOW  :        75,032
+
+        CANTIDAD DE VALORES TABULADOS :          3614
+        VALOR MAXIMO TABULADO         :      3259,000
+
+TIEMPO              TABLE            M1,3600,3600,10
+
+               MEDIA                         :      10888,101
+               DESVIACION ESTANDAR           :      12070,242
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -      3600          164      46,197         46,197        53,803
+      3601  -      7200           30       8,451         54,648        45,352
+      7201  -     10800           25       7,042         61,690        38,310
+     10801  -     14400           20       5,634         67,324        32,676
+     14401  -     18000           18       5,070         72,394        27,606
+     18001  -     21600           16       4,507         76,901        23,099
+     21601  -     25200           17       4,789         81,690        18,310
+     25201  -     28800           19       5,352         87,042        12,958
+     28801  -     32400           16       4,507         91,549         8,451
+     32401  -  Infinito           30       8,451        100,000         0,000
+
+        MEDIA OVERFLOW                :     35760,533
+        DESVIACION ESTANDAR OVERFLOW  :      1957,450
+
+        CANTIDAD DE VALORES TABULADOS :           355
+        VALOR MAXIMO TABULADO         :     38824,000
+
+
+QTables
+
+AUTITOS             TABLE            Q_AUTOS,0,300,15
+
+               MEDIA                         :       1619,749
+               DESVIACION ESTANDAR           :       1475,330
+               CANTIDAD EN RETRY             :              0
+
+          INTERVALO       FRECUENCIA           %     %ACUMULADO    %REMANENTE
+         0  -         0          472      24,648         24,648        75,352
+         1  -       300          177       9,243         33,890        66,110
+       301  -       600           66       3,446         37,337        62,663
+       601  -       900           74       3,864         41,201        58,799
+       901  -      1200          116       6,057         47,258        52,742
+      1201  -      1500           63       3,290         50,548        49,452
+      1501  -      1800           94       4,909         55,457        44,543
+      1801  -      2100          123       6,423         61,880        38,120
+      2101  -      2400           55       2,872         64,752        35,248
+      2401  -      2700           81       4,230         68,982        31,018
+      2701  -      3000           97       5,065         74,047        25,953
+      3001  -      3300          118       6,162         80,209        19,791
+      3301  -      3600          143       7,467         87,676        12,324
+      3601  -      3900          113       5,901         93,577         6,423
+      3901  -  Infinito          123       6,423        100,000         0,000
+
+        MEDIA OVERFLOW                :      4162,211
+        DESVIACION ESTANDAR OVERFLOW  :       120,855
+
+        CANTIDAD DE VALORES TABULADOS :          1915
+        VALOR MAXIMO TABULADO         :      4388,000
+
+
+Savevalues
+
+ SAVEVALUE               VALUE      RETRY
+    STANDS                  14          0
+
+
+Cadena de eventos corrientes (CEC)
+
+ CEC_XACT_NUMBER    PRI          M1       CURRENT       NEXT        PARAMETER        VALUE
+
+
+Cadena de eventos futuros (FEC)
+
+ FEC_XACT_NUMBER    PRI         BDT       CURRENT       NEXT        PARAMETER        VALUE
+            2840      0       43201            16         17              MED          120
+            2799      0       43203            16         17              MED          120
+            3261      0       43203             0          6
+            2803      0       43207            25         26              MED          240
+                                                                            1           12
+            2816      0       43213            16         17              MED          240
+            3249      0       43216            25         26              MED           90
+                                                                            1            4
+            3258      0       43219             4          5
+            2790      0       43221            25         26              MED          120
+                                                                            1            6
+            3262      0       43225             0          1
+            3252      0       43230            25         26              MED           90
+                                                                            1            5
+            3207      1       43231            31         32              MED           90
+                                                                            1        43093
+            3253      0       43240            25         26              MED           90
+                                                                            1            7
+            3260      0       43240             4          5
+            2786      0       43248            25         26              MED           90
+                                                                            1            8
+            2818      0       43249            16         17              MED          240
+            3254      0       43263            25         26              MED           90
+                                                                            1            3
+            3242      0       43280            25         26              MED          240
+                                                                            1            2
+            2808      0       43287            16         17              MED          120
+            2836      0       43306            16         17              MED           90
+            2785      0       43342            16         17              MED           90
+             183      0       43358            16         17              MED          240
+            3239      0       43368            25         26              MED          360
+                                                                            1            9
+            2845      0       43384            16         17              MED          240
+            3256      0       43412            25         26              MED          240
+                                                                            1           10
+            2800      0       43435            16         17              MED          240
+            2795      0       43436            16         17              MED          240
+            2849      0       43443            16         17              MED           90
+            3259      0       43447            25         26              MED          240
+                                                                            1           11
+            2844      0       43502            16         17              MED          240
+            2828      0       43552            16         17              MED          120
+            2854      0       43553            16         17              MED          120
+            2822      0       43559            16         17              MED          120
+            2809      0       43626            16         17              MED           90
+            2829      0       43645            16         17              MED          120
+            2837      0       43659            16         17              MED          240
+            2850      0       43664            16         17              MED          240
+            2833      0       43717            16         17              MED          240
+            2841      0       43733            16         17              MED           90
+            2783      0       43738            16         17              MED           90
+            2823      0       43770            16         17              MED          120
+            2825      0       43805            16         17              MED          240
+            2819      0       43875            16         17              MED           90
+            2830      0       43899            16         17              MED          120
+            2846      0       43969            16         17              MED          360
+            2848      0       44138            16         17              MED           90
+            2852      0       44209            16         17              MED          240
+            3263      0       46800             0         44
